@@ -10,6 +10,7 @@ import re
 import nltk
 nltk.download('punkt')
 nltk.download('stopwords')
+nltk.download('wordnet')
 
 # Function to scrape the content from a given talk URL
 def scrape_talk_content(talk_URL):
