@@ -6,10 +6,7 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from nltk.tokenize import word_tokenize
 from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
-import nltk
-nltk.download('punkt')
-nltk.download('stopwords')
-nltk.download('wordnet')
+import re
 
 # Function to scrape the content from a given talk URL
 def scrape_talk_content(talk_URL):
@@ -33,6 +30,10 @@ def scrape_talk_content(talk_URL):
         body_block_div = soup.find('div', class_='body-block')
         
         if body_block_div:
+            # Remove any divs containing images
+            for div in body_block_div.find_all('div', class_=re.compile(r'imageWrapper-wTPPD')):
+                div.decompose()
+
             # Remove all <a> tags from the body content
             for a_tag in body_block_div.find_all('a'):
                 a_tag.extract()
@@ -48,6 +49,7 @@ def scrape_talk_content(talk_URL):
     except RequestException as e:
         st.error(f"Error: {e}")
         return None
+
 
 # Function to preprocess the text content
 def preprocess_text(text):
@@ -82,6 +84,22 @@ def summarize_text(text, num_paragraphs=7):  # Change num_paragraphs to 7
     # Convert preprocessed paragraphs to TF-IDF matrix
     vectorizer = TfidfVectorizer()
     tfidf_matrix = vectorizer.fit_transform(preprocessed_paragraphs)
+
+    # Get vocabulary
+    vocab = vectorizer.get_feature_names_out()
+
+    # Calculate word scores
+    word_scores = {}
+
+    # Iterate over vocabulary
+    for idx, word in enumerate(vocab):
+        # Sum up TF-IDF scores for the word across all documents
+        score = tfidf_matrix[:, idx].sum()
+        # Store word score
+        word_scores[word] = score
+
+    # Get top five most important words
+    top_four_words = sorted(word_scores.items(), key=lambda x: x[1], reverse=True)[:4]
     
     # Calculate importance scores for paragraphs
     paragraph_scores = tfidf_matrix.sum(axis=1)
@@ -95,7 +113,7 @@ def summarize_text(text, num_paragraphs=7):  # Change num_paragraphs to 7
     # Join top paragraphs to form summary
     summary = '\n\n'.join(top_paragraphs)
     
-    return summary
+    return summary, top_four_words
 
 # Streamlit app
 def main():
@@ -116,9 +134,15 @@ def main():
                 st.subheader(talk_content['Title'])
                 st.write(talk_content['Author'])
             
+                # Three most important Words
+                st.subheader("Most Frequent Words")
+                summary, top_four_words = summarize_text(talk_content['Content'])  # Get top_four_words here
+                top_words = [word[0].capitalize() for word in top_four_words]  # Extract and uppercase the words
+                for word in top_words:
+                    st.text(f"• {word}")  # Display each word as a bullet point
+                
                 # Summarize the text
                 st.subheader("Summary")
-                summary = summarize_text(talk_content['Content'])
                 st.write(summary)
 
                 # Display the extracted content
