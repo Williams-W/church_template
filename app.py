@@ -1,0 +1,128 @@
+import streamlit as st
+import requests
+from bs4 import BeautifulSoup
+from requests.exceptions import RequestException
+from sklearn.feature_extraction.text import TfidfVectorizer
+from nltk.tokenize import word_tokenize
+from nltk.corpus import stopwords
+from nltk.stem import WordNetLemmatizer
+
+# Function to scrape the content from a given talk URL
+def scrape_talk_content(talk_URL):
+    try:
+        # Send a GET request to the URL
+        page = requests.get(talk_URL)
+        page.raise_for_status()  # Raise an exception for bad status codes
+        
+        # Parse the HTML content
+        soup = BeautifulSoup(page.content , 'html.parser')
+
+        # Find the title element and extract its text content
+        title_element = soup.find('h1')
+        title_text = title_element.text.strip() if title_element else "Title not found"
+
+        # Find the author element and extract its text content
+        author_element = soup.find('p', class_='author-name')
+        author_text = author_element.text.strip() if author_element else "Author not found"
+
+        # Find the body element and extract its text content
+        body_block_div = soup.find('div', class_='body-block')
+        
+        if body_block_div:
+            # Remove all <a> tags from the body content
+            for a_tag in body_block_div.find_all('a'):
+                a_tag.extract()
+
+            # Extract the text content from the body
+            content = body_block_div.get_text(separator='\n').strip()
+        else:
+            content = "Content not found"
+
+        # Return the extracted information as a dictionary
+        return {'Title': title_text, 'Author': author_text, 'Content': content}
+    
+    except RequestException as e:
+        st.error(f"Error: {e}")
+        return None
+
+# Function to preprocess the text content
+def preprocess_text(text):
+    # Tokenize paragraphs
+    paragraphs = text.split('\n\n')
+    
+    # Initialize lemmatizer and stopwords
+    lemmatizer = WordNetLemmatizer()
+    stop_words = set(stopwords.words('english'))
+    
+    # Preprocess each paragraph
+    preprocessed_paragraphs = []
+    for paragraph in paragraphs:
+        # Tokenize words
+        words = word_tokenize(paragraph)
+        # Remove stopwords and lemmatize words
+        words = [lemmatizer.lemmatize(word.lower()) for word in words if word.lower() not in stop_words]
+        # Join words back into paragraph
+        preprocessed_paragraph = ' '.join(words)
+        preprocessed_paragraphs.append(preprocessed_paragraph)
+    
+    return preprocessed_paragraphs
+
+# Function to summarize text using TF-IDF
+def summarize_text(text, num_paragraphs=7):  # Change num_paragraphs to 7
+    # Tokenize the original text into paragraphs
+    paragraphs = text.split('\n\n')
+    
+    # Preprocess text
+    preprocessed_paragraphs = preprocess_text(text)
+    
+    # Convert preprocessed paragraphs to TF-IDF matrix
+    vectorizer = TfidfVectorizer()
+    tfidf_matrix = vectorizer.fit_transform(preprocessed_paragraphs)
+    
+    # Calculate importance scores for paragraphs
+    paragraph_scores = tfidf_matrix.sum(axis=1)
+    
+    # Get indices of top N paragraphs based on scores
+    top_paragraph_indices = paragraph_scores.argsort(axis=0)[-num_paragraphs:].flatten()
+    
+    # Get top N original paragraphs
+    top_paragraphs = [paragraphs[i] for i in range(len(paragraphs)) if i in top_paragraph_indices]
+    
+    # Join top paragraphs to form summary
+    summary = '\n\n'.join(top_paragraphs)
+    
+    return summary
+
+# Streamlit app
+def main():
+    st.title("General Conference Analysis")
+
+    # Using Streamlit forms to create the input field without "Press Enter to apply" message
+    with st.form("talk_url_form"):
+        talk_url = st.text_input("Paste Talk URL")
+        submit_button = st.form_submit_button("Search")
+
+    # Button to trigger scraping
+    if submit_button:
+        if talk_url:
+            # Scrape the content from the talk URL
+            talk_content = scrape_talk_content(talk_url)
+
+            if talk_content:
+                st.subheader(talk_content['Title'])
+                st.write(talk_content['Author'])
+            
+                # Summarize the text
+                st.subheader("Summary")
+                summary = summarize_text(talk_content['Content'])
+                st.write(summary)
+
+                # Display the extracted content
+                st.subheader("Full Text")
+                st.write(talk_content['Content'])
+                
+        else:
+            st.warning("Please enter a valid URL.")
+
+if __name__ == "__main__":
+    main()
