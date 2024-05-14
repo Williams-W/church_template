@@ -65,8 +65,6 @@ def scrape_talk_content(talk_URL):
         return {'Title': title_text, 'Author': author_text, 'Content': content}
     
     except RequestException as e:
-        st.write(f"Error: Did you accidentally paste the title and the url in the search bar as shown below?")
-        st.write("Please Remove the Title or Check the URL")
         st.error(f"Error: {e}")
         return None
 
@@ -159,7 +157,6 @@ def main():
         # Disclaimer
         st.write("Content sourced from The Church of Jesus Christ of Latter-day Saints is used solely for analytical purposes and is performed independently of the Church. By accessing and using this site, you agree to use the content in compliance with all applicable laws and regulations. This includes, but is not limited to, copyright law and any terms of use provided by the Church.")
     
-
     # Button to trigger scraping
     if submit_button:
         if talk_url_stripped:
@@ -181,10 +178,6 @@ def main():
                 st.subheader("Summary")
                 st.write(summary)
 
-                # Display the extracted content
-                st.subheader("Full Text")
-                st.write(talk_content['Content'])
-                
         else:
             st.warning("Please enter a valid URL.")
 
