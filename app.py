@@ -8,10 +8,24 @@ from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
 import re
 import nltk
+
+# Download NLTK resources
 nltk.download('punkt')
 nltk.download('stopwords')
 nltk.download('wordnet')
 
+# Function to extract URL from text
+def extract_url(text):
+    # Regular expression pattern to match URLs
+    url_pattern = r'(https?://\S+)'
+    # Search for URLs in the text
+    match = re.search(url_pattern, text)
+    # If a URL is found, return it
+    if match:
+        return match.group(1)
+    else:
+        return None
+    
 # Function to scrape the content from a given talk URL
 def scrape_talk_content(talk_URL):
     try:
@@ -120,6 +134,18 @@ def summarize_text(text, num_paragraphs=7):  # Change num_paragraphs to 7
     
     return summary, top_four_words
 
+# Function to extract URL from text
+def extract_url(text):
+    # Regular expression pattern to match URLs
+    url_pattern = r'(https?://\S+)'
+    # Search for URLs in the text
+    match = re.search(url_pattern, text)
+    # If a URL is found, return it
+    if match:
+        return match.group(1)
+    else:
+        return None
+
 # Streamlit app
 def main():
     st.title("General Conference Analysis")
@@ -127,13 +153,14 @@ def main():
     # Using Streamlit forms to create the input field without "Press Enter to apply" message
     with st.form("talk_url_form"):
         talk_url = st.text_input("Paste Talk URL")
+        talk_url_stripped = extract_url(talk_url)
         submit_button = st.form_submit_button("Search")
 
     # Button to trigger scraping
     if submit_button:
-        if talk_url:
+        if talk_url_stripped:
             # Scrape the content from the talk URL
-            talk_content = scrape_talk_content(talk_url)
+            talk_content = scrape_talk_content(talk_url_stripped)
 
             if talk_content:
                 st.subheader(talk_content['Title'])
