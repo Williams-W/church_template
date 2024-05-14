@@ -156,6 +156,10 @@ def main():
         talk_url_stripped = extract_url(talk_url)
         submit_button = st.form_submit_button("Search")
 
+        # Disclaimer
+        st.write("Content sourced from The Church of Jesus Christ of Latter-day Saints is used solely for analytical purposes and is performed independently of the Church. By accessing and using this site, you agree to use the content in compliance with all applicable laws and regulations. This includes, but is not limited to, copyright law and any terms of use provided by the Church.")
+    
+
     # Button to trigger scraping
     if submit_button:
         if talk_url_stripped:
