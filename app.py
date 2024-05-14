@@ -6,6 +6,10 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from nltk.tokenize import word_tokenize
 from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
+import nltk
+nltk.download('punkt')
+nltk.download('stopwords')
+nltk.download('wordnet')
 
 # Function to scrape the content from a given talk URL
 def scrape_talk_content(talk_URL):
