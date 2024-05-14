@@ -51,9 +51,10 @@ def scrape_talk_content(talk_URL):
         return {'Title': title_text, 'Author': author_text, 'Content': content}
     
     except RequestException as e:
+        st.write(f"Error: Did you accidentally paste the title and the url in the search bar as shown below?")
+        st.write("Please Remove the Title or Check the URL")
         st.error(f"Error: {e}")
         return None
-
 
 # Function to preprocess the text content
 def preprocess_text(text):
