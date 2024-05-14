@@ -1,6 +1,6 @@
 beautifulsoup4==4.10.0
 requests==2.26.0
 nltk==3.6.3
-streamlit==1.1.0
-scikit-learn==0.24.2
+streamlit
+scikit-learn
 
