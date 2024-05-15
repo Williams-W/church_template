@@ -151,6 +151,8 @@ def extract_url(text):
 def main():
     st.title("General Conference Analysis")
 
+    disclaimer_displayed = False  # Initialize the boolean variable
+
     # Using Streamlit forms to create the input field without "Press Enter to apply" message
     with st.form("talk_url_form"):
         st.markdown("""
@@ -165,11 +167,13 @@ def main():
         talk_url_stripped = extract_url(talk_url)
         submit_button = st.form_submit_button("Search")
 
-        # Disclaimer
+    # Display disclaimer only if no search has been performed
+    if not submit_button and not disclaimer_displayed:
         st.write("""Content sourced from The Church of Jesus Christ of Latter-day Saints is utilized solely for personal studies
         and lesson or talk preparation, in accordance with fair use principles. This usage is conducted independently and does not imply
         any ownership or claim of rights to the Church's materials by this site. By accessing and using this site, you agree to adhere to 
         all relevant guidelines governing the use of copyrighted material, including any terms of use provided by the Church.""")
+        disclaimer_displayed = True  # Update the boolean variable
 
     # Button to trigger scraping
     if submit_button:
