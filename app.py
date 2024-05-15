@@ -14,6 +14,7 @@ nltk.download('punkt')
 nltk.download('stopwords')
 nltk.download('wordnet')
 
+
 # Function to extract URL from text
 def extract_url(text):
     # Regular expression pattern to match URLs
@@ -65,6 +66,8 @@ def scrape_talk_content(talk_URL):
         return {'Title': title_text, 'Author': author_text, 'Content': content}
     
     except RequestException as e:
+        st.write(f"Error: Did you accidentally paste the title and the url in the search bar as shown below?")
+        st.write("Please Remove the Title or Check the URL")
         st.error(f"Error: {e}")
         return None
 
@@ -150,13 +153,24 @@ def main():
 
     # Using Streamlit forms to create the input field without "Press Enter to apply" message
     with st.form("talk_url_form"):
-        talk_url = st.text_input("Paste Talk URL")
+        st.markdown("""
+            <div style='position: relative;'>
+                <p style='font-size: 20px; position: absolute; margin-bottom: 0; top: 18px;'>Paste Talk URL</p>
+                <div style='position: absolute; right: 0; top: 18px;'>
+                    <a href='https://www.churchofjesuschrist.org/study/general-conference?lang=eng' target='_blank' style='font-size: 18px; color: blue; text-decoration: underline; padding: 10px; '>Go to Church Website</a>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+        talk_url = st.text_input("", key="talk_url_input")
         talk_url_stripped = extract_url(talk_url)
         submit_button = st.form_submit_button("Search")
 
         # Disclaimer
-        st.write("Content sourced from The Church of Jesus Christ of Latter-day Saints is used solely for analytical purposes and is performed independently of the Church. By accessing and using this site, you agree to use the content in compliance with all applicable laws and regulations. This includes, but is not limited to, copyright law and any terms of use provided by the Church.")
-    
+        st.write("""Content sourced from The Church of Jesus Christ of Latter-day Saints is utilized solely for personal studies
+        and lesson or talk preparation, in accordance with fair use principles. This usage is conducted independently and does not imply
+        any ownership or claim of rights to the Church's materials by this site. By accessing and using this site, you agree to adhere to 
+        all relevant guidelines governing the use of copyrighted material, including any terms of use provided by the Church.""")
+
     # Button to trigger scraping
     if submit_button:
         if talk_url_stripped:
@@ -166,14 +180,14 @@ def main():
             if talk_content:
                 st.subheader(talk_content['Title'])
                 st.write(talk_content['Author'])
-            
+
                 # Three most important Words
                 st.subheader("Most Frequent Words")
                 summary, top_four_words = summarize_text(talk_content['Content'])  # Get top_four_words here
                 top_words = [word[0].capitalize() for word in top_four_words]  # Extract and uppercase the words
                 for word in top_words:
                     st.text(f"• {word}")  # Display each word as a bullet point
-                
+
                 # Summarize the text
                 st.subheader("Summary")
                 st.write(summary)
