@@ -203,7 +203,7 @@ def main():
     # Button to trigger scraping
     if submit_button:
         # Assuming the talk_url_stripped and other processing functions are defined elsewhere
-        st.write("Process the URL here...")
+        st.write("No URL Detected! Please Try Again. ")
 
 if __name__ == "__main__":
     main()
