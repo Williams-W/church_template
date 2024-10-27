@@ -155,7 +155,8 @@ def main():
 
     # Using Streamlit forms to create the input field without "Press Enter to apply" message
     with st.form("talk_url_form"):
-        # Positioning the link to the church website at the top-right corner
+
+                # Positioning the link to the church website at the top-right corner
         st.markdown(
             """
             <div style='display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;'>
@@ -170,27 +171,10 @@ def main():
             """, 
             unsafe_allow_html=True
         )
-
-        # Input field for the URL
+       
         talk_url = st.text_input("", key="talk_url_input")
-
-        # Submit button with custom style
-        submit_button = st.form_submit_button(
-            "Search",
-            help="Click to search with the provided URL",
-            kwargs={
-                "css": {
-                    "padding": "0.4em 1.2em",
-                    "font-size": "16px",
-                    "font-weight": "500",
-                    "color": "white",
-                    "background-color": "#007bff",
-                    "border-radius": "4px",
-                    "border": "none",
-                    "cursor": "pointer"
-                }
-            }
-        )
+        talk_url_stripped = extract_url(talk_url)
+        submit_button = st.form_submit_button("Search")
 
     # Display disclaimer only if no search has been performed
     if not submit_button and not disclaimer_displayed:
@@ -202,8 +186,27 @@ def main():
 
     # Button to trigger scraping
     if submit_button:
-        # Assuming the talk_url_stripped and other processing functions are defined elsewhere
-        st.write("No URL Detected! Please Try Again. ")
+        if talk_url_stripped:
+            # Scrape the content from the talk URL
+            talk_content = scrape_talk_content(talk_url_stripped)
+
+            if talk_content:
+                st.subheader(talk_content['Title'])
+                st.write(talk_content['Author'])
+
+                # Three most important Words
+                st.subheader("Most Frequent Words")
+                summary, top_four_words = summarize_text(talk_content['Content'])  # Get top_four_words here
+                top_words = [word[0].capitalize() for word in top_four_words]  # Extract and uppercase the words
+                for word in top_words:
+                    st.text(f"• {word}")  # Display each word as a bullet point
+
+                # Summarize the text
+                st.subheader("Summary")
+                st.write(summary)
+
+        else:
+            st.warning("Please enter a valid URL.")
 
 if __name__ == "__main__":
     main()
