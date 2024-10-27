@@ -155,17 +155,20 @@ def main():
 
     # Using Streamlit forms to create the input field without "Press Enter to apply" message
     with st.form("talk_url_form"):
-        st.markdown("""
-            <div style='position: relative;'>
-                <p style='font-size: 20px; position: absolute; margin-bottom: 0; top: 18px;'>Paste Talk URL</p>
-                <div style='position: absolute; right: 0; top: 18px;'>
-                    <a href='https://www.churchofjesuschrist.org/study/general-conference?lang=eng' target='_blank' style='font-size: 18px; color: blue; text-decoration: underline; padding: 10px; '>Go to Church Website</a>
-                </div>
-            </div>
-            """, unsafe_allow_html=True)
+        st.markdown("<p style='font-size: 20px; margin-bottom: 10px;'>Paste Talk URL</p>", unsafe_allow_html=True)
         talk_url = st.text_input("", key="talk_url_input")
         talk_url_stripped = extract_url(talk_url)
-        submit_button = st.form_submit_button("Search")
+
+        # Use st.columns to align the buttons
+        col1, col2 = st.columns([1, 1])
+        with col1:
+            submit_button = st.form_submit_button("Search")
+        with col2:
+            st.markdown(
+                "<a href='https://www.churchofjesuschrist.org/study/general-conference?lang=eng' target='_blank'>",
+                unsafe_allow_html=True
+            )
+            st.button("Go to Church Website")
 
     # Display disclaimer only if no search has been performed
     if not submit_button and not disclaimer_displayed:
