@@ -148,15 +148,14 @@ def extract_url(text):
         return None
 
 # Streamlit app
-
 def main():
     st.title("General Conference Analysis")
 
     disclaimer_displayed = False  # Initialize the boolean variable
 
-    # Form layout with custom-styled "Go to Church Website" and "Search" buttons
+    # Using Streamlit forms to create the input field without "Press Enter to apply" message
     with st.form("talk_url_form"):
-        # Header with the Church Website button aligned to the right
+        # Positioning the link to the church website at the top-right corner
         st.markdown(
             """
             <div style='display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;'>
@@ -175,35 +174,36 @@ def main():
         # Input field for the URL
         talk_url = st.text_input("", key="talk_url_input")
 
-        # Using columns for "Search" button alignment
-        col1, col2 = st.columns([3, 1])
-        with col2:
-            submit_button = st.markdown(
-                """
-                <button type="submit" form="talk_url_form" 
-                        style="display: inline-block; width: 100%; padding: 0.4em 1.2em; font-size: 16px; 
-                               font-weight: 500; color: white; background-color: #007bff; border-radius: 4px; 
-                               border: none; cursor: pointer;">
-                    Search
-                </button>
-                """, 
-                unsafe_allow_html=True
-            )
+        # Submit button with custom style
+        submit_button = st.form_submit_button(
+            "Search",
+            help="Click to search with the provided URL",
+            kwargs={
+                "css": {
+                    "padding": "0.4em 1.2em",
+                    "font-size": "16px",
+                    "font-weight": "500",
+                    "color": "white",
+                    "background-color": "#007bff",
+                    "border-radius": "4px",
+                    "border": "none",
+                    "cursor": "pointer"
+                }
+            }
+        )
 
     # Display disclaimer only if no search has been performed
-    if not disclaimer_displayed:
+    if not submit_button and not disclaimer_displayed:
         st.write("""Content sourced from The Church of Jesus Christ of Latter-day Saints is utilized solely for personal studies
         and lesson or talk preparation, in accordance with fair use principles. This usage is conducted independently and does not imply
         any ownership or claim of rights to the Church's materials by this site. By accessing and using this site, you agree to adhere to 
         all relevant guidelines governing the use of copyrighted material, including any terms of use provided by the Church.""")
         disclaimer_displayed = True  # Update the boolean variable
 
-    # Since we can't use st.form_submit_button directly, check the session state to process the form
-    if st.session_state.get("talk_url_input"):
-        talk_url_stripped = st.session_state["talk_url_input"]
-        if talk_url_stripped:
-            # Process the URL or call any related function here
-            st.write("Process the URL here...")
+    # Button to trigger scraping
+    if submit_button:
+        # Assuming the talk_url_stripped and other processing functions are defined elsewhere
+        st.write("Process the URL here...")
 
 if __name__ == "__main__":
     main()
