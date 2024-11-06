@@ -155,14 +155,23 @@ def main():
 
     # Using Streamlit forms to create the input field without "Press Enter to apply" message
     with st.form("talk_url_form"):
-        st.markdown("""
-            <div style='position: relative;'>
-                <p style='font-size: 20px; position: absolute; margin-bottom: 0; top: 18px;'>Paste Talk URL</p>
-                <div style='position: absolute; right: 0; top: 18px;'>
-                    <a href='https://www.churchofjesuschrist.org/study/general-conference?lang=eng' target='_blank' style='font-size: 18px; color: blue; text-decoration: underline; padding: 10px; '>Go to Church Website</a>
-                </div>
+
+                # Positioning the link to the church website at the top-right corner
+        st.markdown(
+            """
+            <div style='display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;'>
+                <p style='font-size: 20px; margin: 0;'>Paste Talk URL</p>
+                <a href='https://www.churchofjesuschrist.org/study/general-conference?lang=eng' 
+                   target='_blank' 
+                   style='display: inline-block; padding: 0.4em 1.2em; font-size: 16px; font-weight: 500; color: white; 
+                          background-color: #007bff; border-radius: 4px; text-decoration: none;'>
+                    Go to Church Website
+                </a>
             </div>
-            """, unsafe_allow_html=True)
+            """, 
+            unsafe_allow_html=True
+        )
+       
         talk_url = st.text_input("", key="talk_url_input")
         talk_url_stripped = extract_url(talk_url)
         submit_button = st.form_submit_button("Search")
