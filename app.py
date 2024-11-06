@@ -14,7 +14,6 @@ nltk.download('punkt')
 nltk.download('stopwords')
 nltk.download('wordnet')
 
-
 # Function to extract URL from text
 def extract_url(text):
     # Regular expression pattern to match URLs
