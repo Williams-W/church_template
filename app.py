@@ -203,7 +203,6 @@ def main():
                 # Summarize the text
                 st.subheader("Summary")
                 st.write(summary)
-
         else:
             st.warning("Please enter a valid URL.")
 
