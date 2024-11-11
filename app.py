@@ -143,7 +143,7 @@ def main():
     with st.form("talk_url_form"):
 
     # Positioning the link to the church website at the top-right corner
-        '''st.markdown("""
+        st.markdown("""
             <div style='display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;'>
                 <p style='font-size: 20px; margin: 0;'>Paste Talk URL</p>
                 <a href='https://www.churchofjesuschrist.org/study/general-conference?lang=eng' 
@@ -153,7 +153,7 @@ def main():
                     Go to Church Website
                 </a>
             </div>
-            """, unsafe_allow_html=True)'''
+            """, unsafe_allow_html=True)
        
         talk_url = st.text_input("", key="talk_url_input")
         talk_url_stripped = extract_url(talk_url)
