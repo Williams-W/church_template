@@ -14,7 +14,6 @@ nltk.download('punkt')
 nltk.download('stopwords')
 nltk.download('wordnet')
 
-
 # Function to extract URL from text
 def extract_url(text):
     # Regular expression pattern to match URLs
@@ -66,8 +65,7 @@ def scrape_talk_content(talk_URL):
         return {'Title': title_text, 'Author': author_text, 'Content': content}
     
     except RequestException as e:
-        st.write(f"Error: Did you accidentally paste the title and the url in the search bar as shown below?")
-        st.write("Please Remove the Title or Check the URL")
+        st.write("Please Check the URL")
         st.error(f"Error: {e}")
         return None
 
@@ -118,7 +116,7 @@ def summarize_text(text, num_paragraphs=7):  # Change num_paragraphs to 7
         # Store word score
         word_scores[word] = score
 
-    # Get top five most important words
+    # Get top 4 most important words
     top_four_words = sorted(word_scores.items(), key=lambda x: x[1], reverse=True)[:4]
     
     # Calculate importance scores for paragraphs
@@ -135,18 +133,6 @@ def summarize_text(text, num_paragraphs=7):  # Change num_paragraphs to 7
     
     return summary, top_four_words
 
-# Function to extract URL from text
-def extract_url(text):
-    # Regular expression pattern to match URLs
-    url_pattern = r'(https?://\S+)'
-    # Search for URLs in the text
-    match = re.search(url_pattern, text)
-    # If a URL is found, return it
-    if match:
-        return match.group(1)
-    else:
-        return None
-
 # Streamlit app
 def main():
     st.title("General Conference Analysis")
@@ -156,9 +142,8 @@ def main():
     # Using Streamlit forms to create the input field without "Press Enter to apply" message
     with st.form("talk_url_form"):
 
-                # Positioning the link to the church website at the top-right corner
-        st.markdown(
-            """
+    # Positioning the link to the church website at the top-right corner
+        '''st.markdown("""
             <div style='display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;'>
                 <p style='font-size: 20px; margin: 0;'>Paste Talk URL</p>
                 <a href='https://www.churchofjesuschrist.org/study/general-conference?lang=eng' 
@@ -168,9 +153,7 @@ def main():
                     Go to Church Website
                 </a>
             </div>
-            """, 
-            unsafe_allow_html=True
-        )
+            """, unsafe_allow_html=True)'''
        
         talk_url = st.text_input("", key="talk_url_input")
         talk_url_stripped = extract_url(talk_url)
