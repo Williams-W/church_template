@@ -93,14 +93,12 @@ def preprocess_text(text):
 
 # Function to summarize text using TF-IDF
 def summarize_text(text, num_paragraphs=7):  # Change num_paragraphs to 7
-    # Tokenize the original text into paragraphs
-    paragraphs = text.split('\n\n')
-    
+
     # Preprocess text
     preprocessed_paragraphs = preprocess_text(text)
     
     # Convert preprocessed paragraphs to TF-IDF matrix
-    vectorizer = TfidfVectorizer()
+    vectorizer = TfidfVectorizer(n_gram = (1,2), max_df = .85)
     tfidf_matrix = vectorizer.fit_transform(preprocessed_paragraphs)
 
     # Get vocabulary
