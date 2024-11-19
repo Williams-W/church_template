@@ -116,8 +116,11 @@ def summarize_text(text, num_paragraphs=7):  # Change num_paragraphs to 7
         # Store word score
         word_scores[word] = score
 
-    # Get top 4 most important words
-    top_four_words = sorted(word_scores.items(), key=lambda x: x[1], reverse=True)[:4]
+    # Filter only unigrams (words with no spaces)
+    unigram_scores = {word: score for word, score in word_scores.items() if " " not in word}
+
+    # Get top 4 most important unigrams
+    top_four_words = sorted(unigram_scores.items(), key=lambda x: x[1], reverse=True)[:4]
     
     # Calculate importance scores for paragraphs
     paragraph_scores = tfidf_matrix.sum(axis=1)
