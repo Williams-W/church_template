@@ -93,6 +93,8 @@ def preprocess_text(text):
 
 # Function to summarize text using TF-IDF
 def summarize_text(text, num_paragraphs=7):  # Change num_paragraphs to 7
+    # Tokenize paragraphs
+    paragraphs = text.split('\n\n')
 
     # Preprocess text
     preprocessed_paragraphs = preprocess_text(text)
