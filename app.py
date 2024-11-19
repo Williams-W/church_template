@@ -100,7 +100,7 @@ def summarize_text(text, num_paragraphs=7):  # Change num_paragraphs to 7
     preprocessed_paragraphs = preprocess_text(text)
     
     # Convert preprocessed paragraphs to TF-IDF matrix
-    vectorizer = TfidfVectorizer(ngram_range=(1, 5))
+    vectorizer = TfidfVectorizer(ngram_range=(1, 3), max_df = .95)
     tfidf_matrix = vectorizer.fit_transform(preprocessed_paragraphs)
 
     # Get vocabulary
