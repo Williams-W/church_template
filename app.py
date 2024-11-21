@@ -175,7 +175,6 @@ def main():
         if talk_url_stripped:
             # Scrape the content from the talk URL
             talk_content = scrape_talk_content(talk_url_stripped)
-            st.session_state["talk_url_input"] = ""
 
             if talk_content:
                 st.subheader(talk_content['Title'])
@@ -191,7 +190,7 @@ def main():
                 # Summarize the text
                 st.subheader("Summary")
                 st.write(summary)
-
+            st.session_state["talk_url_input"] = ""
         else:
             st.warning("Please enter a valid URL.")
 
