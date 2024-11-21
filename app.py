@@ -100,7 +100,7 @@ def summarize_text(text, num_paragraphs=7):  # Change num_paragraphs to 7
     preprocessed_paragraphs = preprocess_text(text)
     
     # Convert preprocessed paragraphs to TF-IDF matrix
-    vectorizer = TfidfVectorizer(ngram_range=(1,2))
+    vectorizer = TfidfVectorizer(ngram_range=(1, 3))
     tfidf_matrix = vectorizer.fit_transform(preprocessed_paragraphs)
 
     # Get vocabulary
@@ -140,15 +140,12 @@ def summarize_text(text, num_paragraphs=7):  # Change num_paragraphs to 7
 def main():
     st.title("General Conference Analysis")
 
-    # Initialize session state for the disclaimer display and input clearing
-    if "disclaimer_displayed" not in st.session_state:
-        st.session_state["disclaimer_displayed"] = False
-    if "talk_url_input" not in st.session_state:
-        st.session_state["talk_url_input"] = ""
+    disclaimer_displayed = False  # Initialize the boolean variable
 
     # Using Streamlit forms to create the input field without "Press Enter to apply" message
     with st.form("talk_url_form"):
-        # Positioning the link to the church website at the top-right corner
+
+    # Positioning the link to the church website at the top-right corner
         st.markdown("""
             <div style='display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;'>
                 <p style='font-size: 20px; margin: 0;'>Paste Talk URL</p>
@@ -160,41 +157,40 @@ def main():
                 </a>
             </div>
             """, unsafe_allow_html=True)
-        
-        # Input field tied to session state
-        talk_url = st.text_input("", value=st.session_state["talk_url_input"], key="talk_url_input")
+       
+        talk_url = st.text_input("", key="talk_url_input")
+        talk_url_stripped = extract_url(talk_url)
         submit_button = st.form_submit_button("Search")
 
     # Display disclaimer only if no search has been performed
-    if not st.session_state["disclaimer_displayed"]:
+    if not submit_button and not disclaimer_displayed:
         st.write("""Content sourced from The Church of Jesus Christ of Latter-day Saints is utilized solely for personal studies
         and lesson or talk preparation, in accordance with fair use principles. This usage is conducted independently and does not imply
         any ownership or claim of rights to the Church's materials by this site. By accessing and using this site, you agree to adhere to 
         all relevant guidelines governing the use of copyrighted material, including any terms of use provided by the Church.""")
-        st.session_state["disclaimer_displayed"] = True  # Mark disclaimer as displayed
+        disclaimer_displayed = True  # Update the boolean variable
 
     # Button to trigger scraping
     if submit_button:
-        talk_url_stripped = extract_url(talk_url)
         if talk_url_stripped:
             # Scrape the content from the talk URL
             talk_content = scrape_talk_content(talk_url_stripped)
-            st.session_state["talk_url_input"] = ""  # Clear input after processing
 
             if talk_content:
                 st.subheader(talk_content['Title'])
                 st.write(talk_content['Author'])
 
-                # Display the three most important words
+                # Three most important Words
                 st.subheader("Most Frequent Words")
-                summary, top_four_words = summarize_text(talk_content['Content'])
-                top_words = [word[0].capitalize() for word in top_four_words]
+                summary, top_four_words = summarize_text(talk_content['Content'])  # Get top_four_words here
+                top_words = [word[0].capitalize() for word in top_four_words]  # Extract and uppercase the words
                 for word in top_words:
-                    st.text(f"• {word}")
+                    st.text(f"• {word}")  # Display each word as a bullet point
 
                 # Summarize the text
                 st.subheader("Summary")
                 st.write(summary)
+
         else:
             st.warning("Please enter a valid URL.")
 
