@@ -140,12 +140,15 @@ def summarize_text(text, num_paragraphs=7):  # Change num_paragraphs to 7
 def main():
     st.title("General Conference Analysis")
 
-    disclaimer_displayed = False  # Initialize the boolean variable
+    # Initialize session state for the disclaimer display and input clearing
+    if "disclaimer_displayed" not in st.session_state:
+        st.session_state["disclaimer_displayed"] = False
+    if "talk_url_input" not in st.session_state:
+        st.session_state["talk_url_input"] = ""
 
     # Using Streamlit forms to create the input field without "Press Enter to apply" message
     with st.form("talk_url_form"):
-
-    # Positioning the link to the church website at the top-right corner
+        # Positioning the link to the church website at the top-right corner
         st.markdown("""
             <div style='display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;'>
                 <p style='font-size: 20px; margin: 0;'>Paste Talk URL</p>
@@ -157,40 +160,41 @@ def main():
                 </a>
             </div>
             """, unsafe_allow_html=True)
-       
-        talk_url = st.text_input("", key="talk_url_input")
-        talk_url_stripped = extract_url(talk_url)
+        
+        # Input field tied to session state
+        talk_url = st.text_input("", value=st.session_state["talk_url_input"], key="talk_url_input")
         submit_button = st.form_submit_button("Search")
 
     # Display disclaimer only if no search has been performed
-    if not submit_button and not disclaimer_displayed:
+    if not st.session_state["disclaimer_displayed"]:
         st.write("""Content sourced from The Church of Jesus Christ of Latter-day Saints is utilized solely for personal studies
         and lesson or talk preparation, in accordance with fair use principles. This usage is conducted independently and does not imply
         any ownership or claim of rights to the Church's materials by this site. By accessing and using this site, you agree to adhere to 
         all relevant guidelines governing the use of copyrighted material, including any terms of use provided by the Church.""")
-        disclaimer_displayed = True  # Update the boolean variable
+        st.session_state["disclaimer_displayed"] = True  # Mark disclaimer as displayed
 
     # Button to trigger scraping
     if submit_button:
+        talk_url_stripped = extract_url(talk_url)
         if talk_url_stripped:
             # Scrape the content from the talk URL
             talk_content = scrape_talk_content(talk_url_stripped)
+            st.session_state["talk_url_input"] = ""  # Clear input after processing
 
             if talk_content:
                 st.subheader(talk_content['Title'])
                 st.write(talk_content['Author'])
 
-                # Three most important Words
+                # Display the three most important words
                 st.subheader("Most Frequent Words")
-                summary, top_four_words = summarize_text(talk_content['Content'])  # Get top_four_words here
-                top_words = [word[0].capitalize() for word in top_four_words]  # Extract and uppercase the words
+                summary, top_four_words = summarize_text(talk_content['Content'])
+                top_words = [word[0].capitalize() for word in top_four_words]
                 for word in top_words:
-                    st.text(f"• {word}")  # Display each word as a bullet point
+                    st.text(f"• {word}")
 
                 # Summarize the text
                 st.subheader("Summary")
                 st.write(summary)
-            st.session_state["talk_url_input"] = ""
         else:
             st.warning("Please enter a valid URL.")
 
