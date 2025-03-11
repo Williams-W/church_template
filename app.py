@@ -92,7 +92,7 @@ def preprocess_text(text):
     return preprocessed_paragraphs
 
 # Function to summarize text using TF-IDF
-def summarize_text(text, num_paragraphs=7):  # Change num_paragraphs to 7
+def summarize_text(text, num_paragraphs):  
     # Tokenize paragraphs
     paragraphs = text.split('\n\n')
 
@@ -162,6 +162,8 @@ def main():
         talk_url_stripped = extract_url(talk_url)
         submit_button = st.form_submit_button("Search")
 
+        num_paragraphs = st.slider("Select number of paragraphs", min_value=5, max_value=10, value=7)  
+
     # Display disclaimer only if no search has been performed
     if not submit_button and not disclaimer_displayed:
         st.write("""Content sourced from The Church of Jesus Christ of Latter-day Saints is utilized solely for personal studies
@@ -182,7 +184,7 @@ def main():
 
                 # Three most important Words
                 st.subheader("Most Frequent Words")
-                summary, top_four_words = summarize_text(talk_content['Content'])  # Get top_four_words here
+                summary, top_four_words = summarize_text(talk_content['Content'], num_paragraphs)  # Get top_four_words here
                 top_words = [word[0].capitalize() for word in top_four_words]  # Extract and uppercase the words
                 for word in top_words:
                     st.text(f"• {word}")  # Display each word as a bullet point
