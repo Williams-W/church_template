@@ -1,123 +1,200 @@
-# Import necessary libraries for scraping, semantic analysis, and Streamlit UI
 import streamlit as st
 import requests
 from bs4 import BeautifulSoup
-import re
-from sentence_transformers import SentenceTransformer
-from keybert import KeyBERT
-import nltk
-from nltk.stem import WordNetLemmatizer
-from nltk.corpus import stopwords
+from requests.exceptions import RequestException
+from sklearn.feature_extraction.text import TfidfVectorizer
 from nltk.tokenize import word_tokenize
+from nltk.corpus import stopwords
+from nltk.stem import WordNetLemmatizer
+import re
+import nltk
 
-# Download NLTK resources for lemmatization and stopword removal
+# Download NLTK resources
 nltk.download('punkt')
 nltk.download('stopwords')
 nltk.download('wordnet')
 
-# Cache embedding and keyword extraction models for fast re-use
-@st.cache_resource
-def load_model():
-    model = SentenceTransformer('all-MiniLM-L6-v2')  # Lightweight, general-purpose embedding model
-    kw_model = KeyBERT(model)  # KeyBERT for semantic keyword extraction using the embedding model
-    return model, kw_model
-
-model, kw_model = load_model()
-
-# Extracts and validates the first URL from user input
+# Function to extract URL from text
 def extract_url(text):
-    match = re.search(r'(https?://\S+)', text)
+    # Regular expression pattern to match URLs
+    url_pattern = r'(https?://\S+)'
+    # Search for URLs in the text
+    match = re.search(url_pattern, text)
+    # If a URL is found, return it
     if match:
-        url = match.group(1)
-        if url.startswith("https://www.churchofjesuschrist.org/"):
-            return url  # Safe URL
-    return None  # Invalid or disallowed URL
-
-# Scrape General Conference talk content from the URL
-@st.cache_data
-def scrape_talk_content(url):
-    page = requests.get(url)
-    soup = BeautifulSoup(page.content, 'html.parser')
-    title = soup.find('h1').text.strip() if soup.find('h1') else 'Title not found'
-    author_el = soup.find('p', class_='author-name')
-    author = author_el.text.strip() if author_el else 'Author not found'
-    body = soup.find('div', class_='body-block')
-    if body:
-        for div in body.find_all('div', class_=re.compile(r'imageWrapper-wTPPD')):
-            div.decompose()
-        for a in body.find_all('a'):
-            a.decompose()
-        content = body.get_text(separator='\n').strip()
+        return match.group(1)
     else:
-        content = 'Content not found'
-    return {'Title': title, 'Author': author, 'Content': content}
+        return None
+    
+# Function to scrape the content from a given talk URL
+def scrape_talk_content(talk_URL):
+    try:
+        # Send a GET request to the URL
+        page = requests.get(talk_URL)
+        page.raise_for_status()  # Raise an exception for bad status codes
+        
+        # Parse the HTML content
+        soup = BeautifulSoup(page.content , 'html.parser')
 
-# Preprocesses paragraphs with lemmatization and stopword removal
+        # Find the title element and extract its text content
+        title_element = soup.find('h1')
+        title_text = title_element.text.strip() if title_element else "Title not found"
+
+        # Find the author element and extract its text content
+        author_element = soup.find('p', class_='author-name')
+        author_text = author_element.text.strip() if author_element else "Author not found"
+
+        # Find the body element and extract its text content
+        body_block_div = soup.find('div', class_='body-block')
+        
+        if body_block_div:
+            # Remove any divs containing images
+            for div in body_block_div.find_all('div', class_=re.compile(r'imageWrapper-wTPPD')):
+                div.decompose()
+
+            # Remove all <a> tags from the body content
+            for a_tag in body_block_div.find_all('a'):
+                a_tag.extract()
+
+            # Extract the text content from the body
+            content = body_block_div.get_text(separator='\n').strip()
+        else:
+            content = "Content not found"
+
+        # Return the extracted information as a dictionary
+        return {'Title': title_text, 'Author': author_text, 'Content': content}
+    
+    except RequestException as e:
+        st.write("Please Check the URL")
+        st.error(f"Error: {e}")
+        return None
+
+# Function to preprocess the text content
 def preprocess_text(text):
+    # Tokenize paragraphs
     paragraphs = text.split('\n\n')
+    
+    # Initialize lemmatizer and stopwords
     lemmatizer = WordNetLemmatizer()
     stop_words = set(stopwords.words('english'))
+    
+    # Preprocess each paragraph
     preprocessed_paragraphs = []
     for paragraph in paragraphs:
+        # Tokenize words
         words = word_tokenize(paragraph)
-        words = [lemmatizer.lemmatize(word.lower()) for word in words if word.lower() not in stop_words and word.isalpha()]
+        # Remove stopwords and lemmatize words
+        words = [lemmatizer.lemmatize(word.lower()) for word in words if word.lower() not in stop_words]
+        # Join words back into paragraph
         preprocessed_paragraph = ' '.join(words)
         preprocessed_paragraphs.append(preprocessed_paragraph)
+    
     return preprocessed_paragraphs
 
-# Semantic summarization using embeddings with preprocessing
-def summarize_text_with_embeddings(text, num_paragraphs):
+# Function to summarize text using TF-IDF
+def summarize_text(text, num_paragraphs):  
+    # Tokenize paragraphs
+    paragraphs = text.split('\n\n')
+
+    # Preprocess text
     preprocessed_paragraphs = preprocess_text(text)
-    paragraphs = [p for p in preprocessed_paragraphs if len(p.strip()) > 30]
-    if not paragraphs:
-        return "No sufficient content to summarize."
-    embeddings = model.encode(paragraphs, convert_to_tensor=True)
-    mean_emb = embeddings.mean(dim=0, keepdim=True)
-    from sentence_transformers.util import cos_sim
-    scores = cos_sim(embeddings, mean_emb).squeeze().tolist()
-    top_indices = sorted(range(len(scores)), key=lambda i: scores[i], reverse=True)[:num_paragraphs]
-    top_indices_sorted = sorted(top_indices)
-    return '\n\n'.join([paragraphs[i] for i in top_indices_sorted])
+    
+    # Convert preprocessed paragraphs to TF-IDF matrix
+    vectorizer = TfidfVectorizer(ngram_range=(1, 2))
+    tfidf_matrix = vectorizer.fit_transform(preprocessed_paragraphs)
 
-# Extracts top keywords using KeyBERT with semantic similarity
-def extract_top_keywords(text, top_n=3):
-    keywords = kw_model.extract_keywords(text, keyphrase_ngram_range=(1, 1), stop_words='english', top_n=top_n)
-    return [kw[0].capitalize() for kw in keywords]
+    # Get vocabulary
+    vocab = vectorizer.get_feature_names_out()
 
-# Streamlit app structure
+    # Calculate word scores
+    word_scores = {}
+
+    # Iterate over vocabulary
+    for idx, word in enumerate(vocab):
+        # Sum up TF-IDF scores for the word across all documents
+        score = tfidf_matrix[:, idx].sum()
+        # Store word score
+        word_scores[word] = score
+
+    # Filter only unigrams (words with no spaces)
+    unigram_scores = {word: score for word, score in word_scores.items() if " " not in word}
+
+    # Get top 4 most important unigrams
+    top_four_words = sorted(unigram_scores.items(), key=lambda x: x[1], reverse=True)[:4]
+    
+    # Calculate importance scores for paragraphs
+    paragraph_scores = tfidf_matrix.sum(axis=1)
+    
+    # Get indices of top N paragraphs based on scores
+    top_paragraph_indices = paragraph_scores.argsort(axis=0)[-num_paragraphs:].flatten()
+    
+    # Get top N original paragraphs
+    top_paragraphs = [paragraphs[i] for i in range(len(paragraphs)) if i in top_paragraph_indices]
+    
+    # Join top paragraphs to form summary
+    summary = '\n\n'.join(top_paragraphs)
+    
+    return summary, top_four_words
+
+# Streamlit app
 def main():
-    st.title("General Conference Semantic Summarizer")
-    with st.form("form"):
+    st.title("General Conference Analysis")
+
+    disclaimer_displayed = False  # Initialize the boolean variable
+
+    # Using Streamlit forms to create the input field without "Press Enter to apply" message
+    with st.form("talk_url_form"):
+
+    # Positioning the link to the church website at the top-right corner
         st.markdown("""
-        <div style='display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;'>
-            <p style='font-size: 20px; margin: 0;'>Paste Talk URL</p>
-            <a href='https://www.churchofjesuschrist.org/study/general-conference?lang=eng' 
-               target='_blank' 
-               style='display: inline-block; padding: 0.4em 1.2em; font-size: 16px; font-weight: 500; color: white; 
-                      background-color: #007bff; border-radius: 4px; text-decoration: none;'>
-                Go to Church Website
-            </a>
-        </div>
-        """, unsafe_allow_html=True)
-        talk_url = st.text_input("")
-        num_paragraphs = st.slider("Number of paragraphs:", 3, 10, 5)
-        submitted = st.form_submit_button("Summarize")
-    if submitted:
-        clean_url = extract_url(talk_url)
-        if not clean_url:
+            <div style='display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;'>
+                <p style='font-size: 20px; margin: 0;'>Paste Talk URL</p>
+                <a href='https://www.churchofjesuschrist.org/study/general-conference?lang=eng' 
+                   target='_blank' 
+                   style='display: inline-block; padding: 0.4em 1.2em; font-size: 16px; font-weight: 500; color: white; 
+                          background-color: #007bff; border-radius: 4px; text-decoration: none;'>
+                    Go to Church Website
+                </a>
+            </div>
+            """, unsafe_allow_html=True)
+       
+        talk_url = st.text_input("", key="talk_url_input")
+        talk_url_stripped = extract_url(talk_url)
+        submit_button = st.form_submit_button("Search")
+
+        num_paragraphs = st.slider("Select number of paragraphs", min_value=5, max_value=10, value=7)  
+
+    # Display disclaimer only if no search has been performed
+    if not submit_button and not disclaimer_displayed:
+        st.write("""Content sourced from The Church of Jesus Christ of Latter-day Saints is utilized solely for personal studies
+        and lesson or talk preparation, in accordance with fair use principles. This usage is conducted independently and does not imply
+        any ownership or claim of rights to the Church's materials by this site. By accessing and using this site, you agree to adhere to 
+        all relevant guidelines governing the use of copyrighted material, including any terms of use provided by the Church.""")
+        disclaimer_displayed = True  # Update the boolean variable
+
+    # Button to trigger scraping
+    if submit_button:
+        if talk_url_stripped:
+            # Scrape the content from the talk URL
+            talk_content = scrape_talk_content(talk_url_stripped)
+
+            if talk_content:
+                st.subheader(talk_content['Title'])
+                st.write(talk_content['Author'])
+
+                # Three most important Words
+                st.subheader("Most Frequent Words")
+                summary, top_four_words = summarize_text(talk_content['Content'], num_paragraphs)  # Get top_four_words here
+                top_words = [word[0].capitalize() for word in top_four_words]  # Extract and uppercase the words
+                for word in top_words:
+                    st.text(f"• {word}")  # Display each word as a bullet point
+
+                # Summarize the text
+                st.subheader("Summary")
+                st.write(summary)
+
+        else:
             st.warning("Please enter a valid URL.")
-            return
-        data = scrape_talk_content(clean_url)
-        st.subheader(data['Title'])
-        st.write(f"**{data['Author']}**")
-        st.subheader("Top 3 Keywords")
-        keywords = extract_top_keywords(data['Content'])
-        for kw in keywords:
-            st.write(f"• {kw}")
-        st.subheader("Summary")
-        summary = summarize_text_with_embeddings(data['Content'], num_paragraphs)
-        st.write(summary)
-        st.info("Content used under fair use for personal study and summarization only.")
 
 if __name__ == "__main__":
     main()
