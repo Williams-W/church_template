@@ -51,23 +51,23 @@ def extract_top_keywords(text, top_n=3):
     return [kw[0].capitalize() for kw in keywords]
 
 def main():
-    st.markdown("""
-    <style>
-        /* Buttons blue with white text */
-        button {background-color: #007bff !important; color: white !important;}
-        /* Slider track and handle blue */
-        div.stSlider > div[data-baseweb='slider'] > div > div {background: #007bff !important;}
-    </style>""", unsafe_allow_html=True)
-
     st.title("General Conference Semantic Summarizer")
     with st.form("form"):
-        st.markdown("""<div style='display: flex; justify-content: space-between; align-items: center;'>
-        <p style='font-size: 20px;'>Paste Talk URL</p>
-        <a href='https://www.churchofjesuschrist.org/study/general-conference?lang=eng' target='_blank' style='padding: 0.3em 0.8em; border-radius: 4px; text-decoration: none;'>Go to Church Website</a>
-        </div>""", unsafe_allow_html=True)
+        st.markdown("""
+        <div style='display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;'>
+            <p style='font-size: 20px; margin: 0;'>Paste Talk URL</p>
+            <a href='https://www.churchofjesuschrist.org/study/general-conference?lang=eng' 
+               target='_blank' 
+               style='display: inline-block; padding: 0.4em 1.2em; font-size: 16px; font-weight: 500; color: white; 
+                      background-color: #007bff; border-radius: 4px; text-decoration: none;'>
+                Go to Church Website
+            </a>
+        </div>
+        """, unsafe_allow_html=True)
         talk_url = st.text_input("")
         num_paragraphs = st.slider("Number of paragraphs:", 3, 10, 5)
         submitted = st.form_submit_button("Summarize")
+
     if submitted:
         clean_url = extract_url(talk_url)
         if not clean_url:
