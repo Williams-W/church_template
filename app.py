@@ -16,10 +16,17 @@ def load_model():
 # Load the models into global variables for use in summarization and keyword extraction
 model, kw_model = load_model()
 
-# Extracts the first URL from a user-provided text input using regex
+# Extracts and validates the first URL from user input
 def extract_url(text):
-    match = re.search(r'(https?://\S+)', text)  # Matches URLs starting with http or https
-    return match.group(1) if match else None  # Return the first found URL or None
+    match = re.search(r'(https?://\S+)', text)  # Regex to extract URL
+    if match:
+        url = match.group(1)
+        # Ensure URL is from allowed domain for safety (SSRF protection)
+        if url.startswith("https://www.churchofjesuschrist.org/"):
+            return url
+        else:
+            return None  # Reject disallowed domains
+    return None  # No URL found
 
 # Scrape talk content (title, author, body) from the provided General Conference talk URL
 @st.cache_data
