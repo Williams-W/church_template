@@ -53,35 +53,37 @@ def extract_top_keywords(text, top_n=3):
 def main():
     st.title("General Conference Semantic Summarizer")
     with st.form("form"):
-        st.markdown("""<div style='display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;'>
-        <p style='font-size: 20px; margin: 0;'>Paste Talk URL</p>
-        <a href='https://www.churchofjesuschrist.org/study/general-conference?lang=eng' 
-           target='_blank' 
-           style='display: inline-block; padding: 0.4em 1.2em; font-size: 16px; font-weight: 500; color: white; 
-                  background-color: #007bff; border-radius: 4px; text-decoration: none;'>
-            Go to Church Website
-        </a>
-        </div>""", unsafe_allow_html=True)
+        st.markdown("""
+        <div style='display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;'>
+            <p style='font-size: 20px; margin: 0;'>Paste Talk URL</p>
+            <a href='https://www.churchofjesuschrist.org/study/general-conference?lang=eng' 
+               target='_blank' 
+               style='display: inline-block; padding: 0.4em 1.2em; font-size: 16px; font-weight: 500; color: white; 
+                      background-color: #007bff; border-radius: 4px; text-decoration: none;'>
+                Go to Church Website
+            </a>
+        </div>
+        """, unsafe_allow_html=True)
         talk_url = st.text_input("")
         num_paragraphs = st.slider("Number of paragraphs:", 3, 10, 5)
-        submitted = st.form_submit_button(" ", help="Click to Summarize")
-        if submitted:
-            st.markdown("""<style>button[kind="primary"] {background-color: #007bff !important; color: white !important; padding: 0.4em 1.2em; font-size: 16px; font-weight: 500; border-radius: 4px;}</style>""", unsafe_allow_html=True)
-            clean_url = extract_url(talk_url)
-            if not clean_url:
-                st.warning("Please enter a valid URL.")
-                return
-            data = scrape_talk_content(clean_url)
-            st.subheader(data['Title'])
-            st.write(f"**{data['Author']}**")
-            st.subheader("Top 3 Keywords")
-            keywords = extract_top_keywords(data['Content'])
-            for kw in keywords:
-                st.write(f"• {kw}")
-            st.subheader("Summary")
-            summary = summarize_text_with_embeddings(data['Content'], num_paragraphs)
-            st.write(summary)
-            st.info("Content used under fair use for personal study and summarization only.")
+        submitted = st.form_submit_button("Summarize")
+
+    if submitted:
+        clean_url = extract_url(talk_url)
+        if not clean_url:
+            st.warning("Please enter a valid URL.")
+            return
+        data = scrape_talk_content(clean_url)
+        st.subheader(data['Title'])
+        st.write(f"**{data['Author']}**")
+        st.subheader("Top 3 Keywords")
+        keywords = extract_top_keywords(data['Content'])
+        for kw in keywords:
+            st.write(f"• {kw}")
+        st.subheader("Summary")
+        summary = summarize_text_with_embeddings(data['Content'], num_paragraphs)
+        st.write(summary)
+        st.info("Content used under fair use for personal study and summarization only.")
 
 if __name__ == "__main__":
     main()
