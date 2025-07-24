@@ -14,17 +14,16 @@ nltk.download('punkt')
 nltk.download('stopwords')
 nltk.download('wordnet')
 
-# Function to extract URL from text
 def extract_url(text):
-    # Regular expression pattern to match URLs
-    url_pattern = r'(https?://\S+)'
-    # Search for URLs in the text
-    match = re.search(url_pattern, text)
-    # If a URL is found, return it
+    match = re.search(r'(https?://\S+)', text)  # Regex to extract URL
     if match:
-        return match.group(1)
-    else:
-        return None
+        url = match.group(1)
+        # Ensure URL is from allowed domain for safety (SSRF protection)
+        if url.startswith("https://www.churchofjesuschrist.org/"):
+            return url
+        else:
+            return None  # Reject disallowed domains
+    return None  # No URL found
     
 # Function to scrape the content from a given talk URL
 def scrape_talk_content(talk_URL):
