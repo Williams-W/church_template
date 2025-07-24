@@ -51,11 +51,12 @@ def extract_top_keywords(text, top_n=3):
     return [kw[0].capitalize() for kw in keywords]
 
 def main():
-    st.markdown("""<style>
-        /* Buttons (all Streamlit buttons) */button {background-color: #007bff !important; color: white !important;}
-        /* Slider track and handle */div.stSlider > div[data-baseweb='slider'] > div > div {background: #007bff !important;}
-        /* Remove blue from slider label text (numbers) */div.stSlider label, div.stSlider span {color: inherit !important;  
-        /* fallback to default text color */}/* Keep links and other text normal */a, p, h1, h2, h3, h4, h5, h6 {color: inherit !important; background-color: transparent !important;}
+    st.markdown("""
+    <style>
+        /* Buttons blue with white text */
+        button {background-color: #007bff !important; color: white !important;}
+        /* Slider track and handle blue */
+        div.stSlider > div[data-baseweb='slider'] > div > div {background: #007bff !important;}
     </style>""", unsafe_allow_html=True)
 
     st.title("General Conference Semantic Summarizer")
