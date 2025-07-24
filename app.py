@@ -1,4 +1,3 @@
-```python
 # Import necessary libraries for scraping, semantic analysis, and Streamlit UI
 import streamlit as st
 import requests
@@ -122,4 +121,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-```
