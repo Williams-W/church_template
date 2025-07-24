@@ -1,6 +1,6 @@
-beautifulsoup4==4.10.0
-requests==2.26.0
-nltk==3.6.3
 streamlit
-scikit-learn
-
+requests
+beautifulsoup4
+nltk
+sentence-transformers
+torch
